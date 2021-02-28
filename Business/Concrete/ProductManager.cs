@@ -1,4 +1,5 @@
 ﻿using Business.Abstract;
+using Business.BusinessAspects.Autofac;
 using Business.CCS;
 using Business.Constants;
 using Business.ValidationRules.FluentValidation;
@@ -23,17 +24,21 @@ namespace Business.Concrete
         IProductDal _productDal;
         ICategoryService _categoryService;
 
-
-        public ProductManager(IProductDal productDal, ICategoryService categoryService)
+        public ProductManager(IProductDal productDal,ICategoryService categoryService)
         {
             _productDal = productDal;
             _categoryService = categoryService;
-
         }
 
+        //00.25 Dersteyiz
+        //Claim
+        [SecuredOperation("product.add,admin")]
         [ValidationAspect(typeof(ProductValidator))]
         public IResult Add(Product product)
         {
+
+            //Aynı isimde ürün eklenemez
+            //Eğer mevcut kategori sayısı 15'i geçtiyse sisteme yeni ürün eklenemez. ve 
             IResult result = BusinessRules.Run(CheckIfProductNameExists(product.ProductName), 
                 CheckIfProductCountOfCategoryCorrect(product.CategoryId), CheckIfCategoryLimitExceded());
 
@@ -47,7 +52,10 @@ namespace Business.Concrete
             return new SuccessResult(Messages.ProductAdded);
 
 
+           
+            //23:10 Dersteyiz
         }
+
 
         public IDataResult<List<Product>> GetAll()
         {
@@ -82,16 +90,23 @@ namespace Business.Concrete
             }
             return new SuccessDataResult<List<ProductDetailDto>>(_productDal.GetProductDetails());
         }
+
         [ValidationAspect(typeof(ProductValidator))]
         public IResult Update(Product product)
         {
+            var result = _productDal.GetAll(p => p.CategoryId == product.CategoryId).Count;
+            if (result >= 10)
+            {
+                return new ErrorResult(Messages.ProductCountOfCategoryError);
+            }
             throw new NotImplementedException();
         }
 
         private IResult CheckIfProductCountOfCategoryCorrect(int categoryId)
         {
+            //Select count(*) from products where categoryId=1
             var result = _productDal.GetAll(p => p.CategoryId == categoryId).Count;
-            if (result >= 10)
+            if (result >= 15)
             {
                 return new ErrorResult(Messages.ProductCountOfCategoryError);
             }
@@ -111,11 +126,13 @@ namespace Business.Concrete
         private IResult CheckIfCategoryLimitExceded()
         {
             var result = _categoryService.GetAll();
-            if (result.Data.Count > 15)
+            if (result.Data.Count>15)
             {
                 return new ErrorResult(Messages.CategoryLimitExceded);
             }
+
             return new SuccessResult();
         }
+
     }
 }

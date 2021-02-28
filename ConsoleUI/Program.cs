@@ -1,7 +1,6 @@
 ﻿using Business.Concrete;
 using DataAccess.Concrete.EntityFramework;
 using DataAccess.Concrete.InMemory;
-using Entities.Concrete;
 using System;
 
 namespace ConsoleUI
@@ -11,44 +10,42 @@ namespace ConsoleUI
     class Program
     {
         static void Main(string[] args)
-        {   
+        {
             //Data Transformation Object
             ProductTest();
-            //IoC
+            //IoC 
             //CategoryTest();
-
-            //ProductManager productManager = new ProductManager(new EfProductDal());
-            //productManager.Add(new Product {ProductName="Test",CategoryId=1,UnitPrice=100,UnitsInStock=10 });
         }
 
         private static void CategoryTest()
         {
-        //    CategoryManager categoryManager = new CategoryManager(new EfCategoryDal());
-        //    foreach (var category in categoryManager.GetAll())
-        //    {
-        //        Console.WriteLine(category.CategoryName);
-        //    }
+            CategoryManager categoryManager = new CategoryManager(new EfCategoryDal());
+            foreach (var category in categoryManager.GetAll().Data)
+            {
+                Console.WriteLine(category.CategoryName);
+            }
         }
 
         private static void ProductTest()
         {
-            //ProductManager productManager = new ProductManager(new EfProductDal());
+            ProductManager productManager = new ProductManager(new EfProductDal()
+                ,new CategoryManager(new EfCategoryDal()));
 
-            //var result = productManager.GetProductDetails();
+            var result = productManager.GetProductDetails();
 
-            //if (result.Success == true)
-            //{
-            //    foreach (var product in result.Data)
-            //    {
-            //        Console.WriteLine(product.ProductName + "/" + product.CategoryName);
-            //    }
-            //}
-            //else
-            //{
-            //    Console.WriteLine(result.Message);
-            //}
+            if (result.Success==true)
+            {
+                foreach (var product in result.Data)
+                {
+                    Console.WriteLine(product.ProductName + "/" + product.CategoryName);
+                }
+            }
+            else
+            {
+                Console.WriteLine(result.Message);
+            }
 
-
+            
         }
     }
 }
